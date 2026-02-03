@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class JobController extends Controller
 {
-    // React par Active Jobs dikhane ke liye
     public function index()
     {
         $jobs = Career::where('is_active', true)->latest()->get();
@@ -20,7 +19,6 @@ class JobController extends Controller
         ]);
     }
 
-    // Form Submit (Application) handle karne ke liye
     public function apply(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -35,13 +33,11 @@ class JobController extends Controller
         }
 
         try {
-            // CV File ko Storage mein save karna
             if ($request->hasFile('resume')) {
                 $file = $request->file('resume');
-                $path = $file->store('resumes', 'public'); // storage/app/public/resumes mein jayegi
+                $path = $file->store('resumes', 'public'); // storage/app/public/resumes 
             }
 
-            // Database mein data save karna
             Job_application::create([
                 'career_id'       => $request->career_id,
                 'applicant_name'  => $request->applicant_name,

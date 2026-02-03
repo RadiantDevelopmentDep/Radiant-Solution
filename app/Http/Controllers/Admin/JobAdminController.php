@@ -8,9 +8,6 @@ use App\Models\Job_application;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-// Yahan apne Mail classes import karein (Jo hum aglay step mein banayenge)
-// use App\Mail\JobOnboardMail;
-// use App\Mail\JobRejectedMail;
 
 class JobAdminController extends Controller
 {
@@ -68,7 +65,6 @@ class JobAdminController extends Controller
                 // Mail::to($application->applicant_email)->send(new JobRejectedMail($application));
             }
         } catch (\Exception $e) {
-            // Mail fail ho toh error log ho jaye magar page crash na ho
             Log::error("Mail Sending Failed: " . $e->getMessage());
         }
 

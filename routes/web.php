@@ -33,7 +33,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('job-applications', [JobAdminController::class, 'applications'])->name('jobs.applications');
     Route::delete('job-applications/{id}', [JobAdminController::class, 'destroyApplication'])->name('jobs.applications.destroy');
     
-    // --- MISSING ROUTE JO AB ADD KIYA HAI ---
     Route::patch('job-applications/{id}/status', [JobAdminController::class, 'updateStatus'])->name('jobs.applications.updateStatus');
 });
     // Profile
@@ -52,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 2. COMPANY FRONTEND (Sirf tab chalega jab koi admin route match na ho)
+| 2. COMPANY FRONTEND 
 |--------------------------------------------------------------------------
 */
 
