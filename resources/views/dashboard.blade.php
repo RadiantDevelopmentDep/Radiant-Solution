@@ -40,7 +40,7 @@
         .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.05); }
         .nav-link.active { background: var(--accent); color: var(--primary); }
 
-        /* --- MOBILE HEADER (Same as Inquiry Page) --- */
+        /* --- MOBILE HEADER --- */
         .mobile-header {
             display: none; width: 100%; background: var(--primary); padding: 15px 20px;
             position: fixed; top: 0; left: 0; z-index: 1500; align-items: center; color: white;
@@ -56,6 +56,35 @@
 
         .header-top { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .header-top h1 { font-weight: 800; font-size: 2.2rem; color: var(--primary); letter-spacing: -1px; }
+
+        /* User Pill & Dropdown */
+        .user-pill {
+            background: var(--white); padding: 8px 8px 8px 20px; border-radius: 50px; 
+            display: flex; align-items: center; gap: 12px; border: 1px solid #eef2f2;
+            position: relative; cursor: pointer; transition: 0.3s;
+        }
+        .user-pill:hover { border-color: var(--accent); }
+        .user-avatar { width: 35px; height: 35px; background: var(--primary); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+        
+        #userDropdown {
+            display: none; position: absolute; top: 115%; right: 0; 
+            background: white; border-radius: 18px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
+            width: 200px; padding: 10px; border: 1px solid #eef2f2; z-index: 3000;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            width: 100%; text-align: left; background: none; border: none; 
+            padding: 12px 15px; color: #ef4444; font-weight: 700; font-size: 13px; 
+            display: flex; align-items: center; gap: 10px; cursor: pointer; 
+            border-radius: 12px; transition: 0.3s;
+        }
+        .dropdown-item:hover { background: #fff5f5; }
 
         /* Stats Cards */
         .stats-grid { 
@@ -83,43 +112,16 @@
             align-items: center; gap: 10px; transition: 0.3s;
         }
 
-        /* User Pill */
-        .user-pill {
-            background: var(--white); padding: 8px 8px 8px 20px; border-radius: 50px; 
-            display: flex; align-items: center; gap: 12px; border: 1px solid #eef2f2;
-        }
-        .user-avatar { width: 35px; height: 35px; background: var(--primary); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-
-        /* Alert Toast */
-        .alert-toast {
-            position: fixed; top: 30px; right: 30px; background: var(--white); 
-            border-left: 5px solid #ef4444; padding: 20px; border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1); display: flex; 
-            align-items: center; gap: 15px; z-index: 1600;
-        }
-
         /* Sidebar Mask */
         .sidebar-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1900; }
         .sidebar-mask.active { display: block; }
 
-        /* --- RESPONSIVE QUERIES --- */
-        @media (max-width: 1200px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
+        /* --- RESPONSIVE --- */
         @media (max-width: 992px) {
             .sidebar { left: -100%; }
             .sidebar.active { left: 0; }
             .main-wrapper { margin-left: 0; padding: 100px 20px 40px; }
             .mobile-header { display: flex; }
-            .header-top h1 { font-size: 1.8rem; }
-        }
-
-        @media (max-width: 576px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .hub-card { padding: 40px 20px; }
-            .btn-action { width: 100%; justify-content: center; }
-            .alert-toast { left: 20px; right: 20px; top: 80px; }
         }
     </style>
 </head>
@@ -138,14 +140,14 @@
         <a href="{{ route('dashboard') }}" class="nav-link active"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
         <a href="{{ route('admin.inquiries.index') }}" class="nav-link"><i class="bi bi-chat-left-dots-fill"></i> Inquiries</a>
         <a href="{{ route('jobs.index') }}" class="nav-link"><i class="bi bi-briefcase-fill"></i> Career</a>
-        <a href="#" class="nav-link"><i class="bi bi-people-fill"></i> Team Management</a>
+        {{-- <a href="#" class="nav-link"><i class="bi bi-people-fill"></i> Team Management</a> --}}
     </nav>
 </aside>
 
 <main class="main-wrapper">
 
     @if($stats['pending'] > 0)
-    <div class="alert-toast" id="alertBox">
+    <div class="alert-toast" id="alertBox" style="position: fixed; top: 30px; right: 30px; background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow-md); border-left: 5px solid #ef4444; display: flex; align-items: center; gap: 15px; z-index: 1600;">
         <div style="background: #fee2e2; padding: 10px; border-radius: 12px; color: #ef4444;">
             <i class="bi bi-bell-fill"></i>
         </div>
@@ -163,9 +165,21 @@
             <h1>Admin Dashboard</h1>
         </div>
 
-        <div class="user-pill">
+        <div class="user-pill" onclick="toggleUserMenu(event)">
             <span style="font-weight: 700; font-size: 13px; color: var(--primary);">{{ Auth::user()->name }}</span>
             <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+            
+            <div id="userDropdown">
+                <div style="padding: 10px 15px; border-bottom: 1px solid #f8fafc; margin-bottom: 5px;">
+                    <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Account</p>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="dropdown-item">
+                        <i class="bi bi-box-arrow-right"></i> Logout Now
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -192,7 +206,7 @@
         <i class="bi bi-shield-check" style="font-size: 4rem; color: var(--accent); margin-bottom: 25px; display: block;"></i>
         <h2 style="color: var(--primary); font-size: 28px; font-weight: 800; margin-bottom: 15px;">Operational Control</h2>
         <p style="color: #94a3b8; max-width: 550px; margin: 0 auto; line-height: 1.6; font-size: 15px;">
-            Manage your service flow and career opportunities from one unified interface. All system nodes are currently healthy.
+            Manage your service flow and career opportunities from one unified interface.
         </p>
         <div class="btn-group">
             <a href="{{ route('admin.inquiries.index') }}" class="btn-action">
@@ -207,9 +221,25 @@
 </main>
 
 <script>
+    // Toggle Sidebar for Mobile
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('active');
         document.getElementById('mask').classList.toggle('active');
+    }
+
+    // Toggle User Dropdown
+    function toggleUserMenu(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Close Dropdown when clicking outside
+    window.onclick = function(event) {
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown && dropdown.style.display === 'block') {
+            dropdown.style.display = 'none';
+        }
     }
 </script>
 

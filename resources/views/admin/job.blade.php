@@ -41,7 +41,7 @@
         .nav-link:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-link.active { background: var(--accent); color: var(--primary); }
 
-        /* --- MOBILE HEADER (Left Button) --- */
+        /* --- MOBILE HEADER --- */
         .mobile-header {
             display: none; width: 100%; background: var(--primary); padding: 15px 20px;
             position: fixed; top: 0; left: 0; z-index: 1500; align-items: center; color: white;
@@ -62,6 +62,9 @@
         .form-group { margin-bottom: 20px; }
         label { display: block; font-size: 10px; font-weight: 800; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px 18px; border-radius: 16px; border: 1px solid #eef2f2; background: #f8fafc; font-weight: 600; font-size: 14px; color: var(--primary); outline: none; }
+        
+        /* Specific style for fixed location input */
+        input[readonly] { background: #f1f5f9; color: #64748b; cursor: not-allowed; border-color: #e2e8f0; }
 
         .btn-save { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 18px; font-weight: 800; cursor: pointer; transition: 0.4s; }
         .btn-save:hover { background: var(--primary-dark); transform: translateY(-3px); }
@@ -83,29 +86,14 @@
         .cv-link:hover { background: var(--accent-soft); }
         .badge-count { background: var(--accent-soft); color: var(--primary); padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; }
 
-        /* --- SIDEBAR MASK --- */
         .sidebar-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1900; backdrop-filter: blur(4px); }
         .sidebar-mask.active { display: block; }
-
-        /* --- MEDIA QUERIES --- */
-        @media (max-width: 1150px) {
-            .hub-container { grid-template-columns: 1fr; }
-            .glass-card { position: static; margin-bottom: 30px; }
-        }
 
         @media (max-width: 992px) {
             .sidebar { left: -100%; }
             .sidebar.active { left: 0; }
             .main-wrapper { margin-left: 0; padding: 100px 20px 40px; }
             .mobile-header { display: flex; }
-        }
-
-        @media (max-width: 600px) {
-            .header-top h1 { font-size: 1.8rem; }
-            .job-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .applicant-row { flex-direction: column; align-items: flex-start; gap: 20px; }
-            .applicant-row > div:last-child { width: 100%; justify-content: space-between; gap: 10px; }
-            .status-select { flex: 1; font-size: 10px; }
         }
     </style>
 </head>
@@ -124,7 +112,6 @@
         <a href="{{ route('dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
         <a href="{{ route('admin.inquiries.index') }}" class="nav-link"><i class="bi bi-chat-left-dots-fill"></i> Inquiries</a>
         <a href="{{ route('jobs.index') }}" class="nav-link active"><i class="bi bi-briefcase-fill"></i> Career</a>
-        <a href="#" class="nav-link"><i class="bi bi-people-fill"></i> Team Management</a>
     </nav>
 </aside>
 
@@ -146,15 +133,15 @@
                 @csrf
                 <div class="form-group">
                     <label>Position Name</label>
-                    <input type="text" name="title" required placeholder="e.g. Full Stack Developer">
+                    <input type="text" name="title" required placeholder="e.g. UI/UX Designer">
                 </div>
                 <div class="form-group">
-                    <label>Location</label>
-                    <input type="text" name="location" required placeholder="Islamabad (Remote)">
+                    <label>Job Location</label>
+                    <input type="text" name="location" value="Karachi (Onsite)" readonly tabindex="-1">
                 </div>
                 <div class="form-group">
                     <label>Job Description</label>
-                    <textarea name="description" rows="4" placeholder="Role requirements..."></textarea>
+                    <textarea name="description" rows="4" placeholder="Mention key skills and responsibilities..." required></textarea>
                 </div>
                 <button type="submit" class="btn-save">PUBLISH JOB</button>
             </form>
@@ -183,9 +170,15 @@
                 <div class="applicants-list">
                     @forelse($job->applications as $app)
                     <div class="applicant-row">
-                        <div class="app-info">
-                            <h4 style="font-size:14px; font-weight: 800;">{{ $app->applicant_name }}</h4>
+                        <div class="app-info" style="flex: 1;">
+                            <h4 style="font-size:14px; font-weight: 800; color: var(--primary);">{{ $app->applicant_name }}</h4>
                             <p style="font-size:11px; color:#94a3b8;"><i class="bi bi-envelope"></i> {{ $app->applicant_email }}</p>
+                            
+                            @if($app->cover_letter)
+                                <div style="margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 12px; border-left: 3px solid var(--accent); max-width: 90%;">
+                                    <p style="font-size: 11px; color: #475569; line-height: 1.4; font-style: italic;">"{{ $app->cover_letter }}"</p>
+                                </div>
+                            @endif
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 15px;">
@@ -210,20 +203,21 @@
                                 <i class="bi bi-file-earmark-pdf"></i> CV
                             </a>
 
-                            <form action="{{ route('jobs.applications.destroy', $app->id) }}" method="POST">
+                            <form action="{{ route('jobs.applications.destroy', $app->id) }}" method="POST" onsubmit="return confirm('Delete this application?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" style="border:none; background:none; color:#cbd5e1; cursor:pointer;"><i class="bi bi-x-circle-fill"></i></button>
                             </form>
                         </div>
                     </div>
                     @empty
-                    <div style="padding: 40px; text-align: center; color: #94a3b8; font-size: 13px;">No applications yet.</div>
+                    <div style="padding: 40px; text-align: center; color: #94a3b8; font-size: 13px;">No applications yet for this role.</div>
                     @endforelse
                 </div>
             </div>
             @empty
             <div style="text-align:center; padding:80px; background: white; border-radius: 32px; color: #94a3b8;">
-                No active job listings found.
+                <i class="bi bi-info-circle" style="font-size: 2rem; display: block; margin-bottom: 15px;"></i>
+                No active job listings found. Start by adding one!
             </div>
             @endforelse
         </div>
@@ -236,19 +230,16 @@
    // EmailJS Init
    (function(){ emailjs.init("n9lqa65RPzV_vtWvK"); })();
 
-   // Mobile Sidebar Toggle
    function toggleSidebar() {
        document.getElementById('sidebar').classList.toggle('active');
        document.getElementById('mask').classList.toggle('active');
    }
 
-   // Accordion Logic
    function toggleApplicants(jobId) {
        const card = document.getElementById('job-card-' + jobId);
        card.classList.toggle('active');
    }
 
-   // Email & Status Logic (No skips!)
    function handleStatusChange(selectElement, appId, appName, appEmail, jobTitle) {
        const newStatus = selectElement.value;
        const form = document.getElementById('status-form-' + appId);
@@ -256,8 +247,8 @@
        if (newStatus === 'onboard' || newStatus === 'rejected') {
            let subject = newStatus === 'onboard' ? `Congratulations! You're Onboarded ✨` : `Application Update - ${jobTitle}`;
            let messageBody = newStatus === 'onboard' 
-                ? `Dear ${appName},\n\nWelcome to the Radiant family! You've been selected for ${jobTitle}.` 
-                : `Dear ${appName},\n\nThank you for applying for ${jobTitle}. We won't be moving forward at this time.`;
+                ? `Dear ${appName},\n\nGreat news! We're thrilled to officially onboard you for the ${jobTitle} position at Radiant. Welcome to the team!` 
+                : `Dear ${appName},\n\nThank you for your interest in the ${jobTitle} position. After careful review, we won't be moving forward with your application at this time.`;
 
            emailjs.send('service_x2os94m', 'template_a3ws7tz', {
                subject: subject,

@@ -48,13 +48,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect('/login');
     })->name('logout');
 });
-
+Route::patch('/admin/multi-inquiries/{id}/status', [ServiceController::class, 'updateMultiStatus'])
+    ->name('admin.multi-inquiries.update-status');
 /*
 |--------------------------------------------------------------------------
 | 2. COMPANY FRONTEND 
 |--------------------------------------------------------------------------
 */
 
+// Route::get('/{any}', function () {
+//     return file_get_contents(public_path('index.html'));
+// })->where('any', '.*');
+
+// Is route ko file ke bilkul END mein rakhein
 Route::get('/{any}', function () {
     return file_get_contents(public_path('index.html'));
-})->where('any', '.*');
+})->where('any', '^(?!api|login|register|dashboard|admin|logout).*$');

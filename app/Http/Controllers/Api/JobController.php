@@ -19,8 +19,21 @@ class JobController extends Controller
         ]);
     }
 
-    public function apply(Request $request)
+   public function apply(Request $request)
     {
+        // 1. Check for duplicate application for the same job
+        $exists = Job_application::where('career_id', $request->career_id)
+            ->where('applicant_email', $request->applicant_email)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already applied for this position with this email address.'
+            ], 400); // 400 Bad Request
+        }
+
+        // 2. Standard Validation
         $validator = Validator::make($request->all(), [
             'career_id'       => 'required|exists:careers,id',
             'applicant_name'  => 'required|string|max:255',
@@ -33,9 +46,9 @@ class JobController extends Controller
         }
 
         try {
+            $path = null;
             if ($request->hasFile('resume')) {
-                $file = $request->file('resume');
-                $path = $file->store('resumes', 'public'); // storage/app/public/resumes 
+                $path = $request->file('resume')->store('resumes', 'public');
             }
 
             Job_application::create([
@@ -43,7 +56,7 @@ class JobController extends Controller
                 'applicant_name'  => $request->applicant_name,
                 'applicant_email' => $request->applicant_email,
                 'resume_path'     => $path,
-                'cover_letter'    => $request->cover_letter,
+                'cover_letter'    => $request->cover_letter ?? 'Submitted via Web Portal',
             ]);
 
             return response()->json([
